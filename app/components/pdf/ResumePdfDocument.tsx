@@ -4,7 +4,7 @@ import { getTemplate, TemplateConfig } from "@/app/lib/templates";
 
 function makeStyles(t: TemplateConfig) {
   return StyleSheet.create({
-    page: { flexDirection: t.layout === "sidebar-left" ? "row-reverse" : "row", fontFamily: "Helvetica", fontSize: 9 },
+    page: { flexDirection: "row", fontFamily: "Helvetica", fontSize: 9 },
     main: { flex: 2, padding: 28 },
     sidebar: { width: 150, padding: 18, backgroundColor: t.sidebarColor, color: t.sidebarTextColor },
     singlePage: { flex: 1, padding: 36, fontFamily: "Helvetica" },
@@ -40,6 +40,20 @@ function makeStyles(t: TemplateConfig) {
     linkLabel: { fontSize: 7.5, color: t.sidebarTextColor, fontFamily: "Helvetica-Bold" },
     linkUrl: { fontSize: 7, color: "rgba(255,255,255,0.7)" },
     linkEntry: { marginBottom: 6 },
+    // Minimal (single-column)
+    minimalHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderBottom: 2, borderBottomColor: t.accentColor, paddingBottom: 12, marginBottom: 20 },
+    minimalName: { fontSize: 22, fontFamily: "Helvetica-Bold", color: "#111827" },
+    minimalJobTitle: { fontSize: 9, letterSpacing: 2, color: t.accentColor, textTransform: "uppercase", marginTop: 4 },
+    minimalContact: { fontSize: 8, color: "#6b7280", textAlign: "right", marginBottom: 2 },
+    minimalSectionTitle: { fontSize: 11, fontFamily: "Helvetica-Bold", color: t.accentColor, borderBottom: 1, borderBottomColor: "#e5e7eb", paddingBottom: 3, marginBottom: 8 },
+    minimalSection: { marginBottom: 16 },
+    minimalBottomRow: { flexDirection: "row", gap: 20, marginTop: 8 },
+    minimalCol: { flex: 1 },
+    minimalSkillRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 5 },
+    minimalSkillName: { fontSize: 9, color: "#374151" },
+    minimalBarOuter: { width: 70, height: 3, backgroundColor: "#e5e7eb", borderRadius: 2 },
+    minimalBarInner: { height: 3, borderRadius: 2, backgroundColor: t.accentColor },
+    minimalHobbies: { fontSize: 9, color: "#4b5563", lineHeight: 1.6 },
   });
 }
 
@@ -53,10 +67,137 @@ export function ResumePdfDocument({ data, templateId = "classic" }: Props) {
   const s = makeStyles(t);
   const { personalDetails, profile, employmentHistory, education, certifications, skills, languages, hobbies, links } = data;
 
+  // Single-column (Minimal) layout
+  if (t.layout === "single-column") {
+    return (
+      <Document>
+        <Page size="A4" style={s.singlePage}>
+          {/* Header */}
+          <View style={s.minimalHeader}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+              {personalDetails.photoUrl ? (
+                <Image src={personalDetails.photoUrl} style={{ width: 56, height: 56, borderRadius: 28 }} />
+              ) : null}
+              <View>
+                <Text style={s.minimalName}>{personalDetails.fullName}</Text>
+                <Text style={s.minimalJobTitle}>{personalDetails.jobTitle}</Text>
+              </View>
+            </View>
+            <View style={{ alignItems: "flex-end" }}>
+              {personalDetails.email ? <Text style={s.minimalContact}>{personalDetails.email}</Text> : null}
+              {personalDetails.phone ? <Text style={s.minimalContact}>{personalDetails.phone}</Text> : null}
+              {personalDetails.address ? <Text style={s.minimalContact}>{personalDetails.address}</Text> : null}
+              {links.map((l) => (
+                <Text key={l.id} style={s.minimalContact}>{l.label}: {l.url}</Text>
+              ))}
+            </View>
+          </View>
+
+          {/* Profile */}
+          {profile ? (
+            <View style={s.minimalSection}>
+              <Text style={s.minimalSectionTitle}>Profile</Text>
+              <Text style={s.bodyText}>{profile}</Text>
+            </View>
+          ) : null}
+
+          {/* Employment */}
+          {employmentHistory.length > 0 && (
+            <View style={s.minimalSection}>
+              <Text style={s.minimalSectionTitle}>Employment History</Text>
+              {employmentHistory.map((e) => (
+                <View key={e.id} style={s.entryWrap}>
+                  <Text style={s.jobHeader}>{[e.jobTitle, e.employer, e.city].filter(Boolean).join(", ")}</Text>
+                  <Text style={s.jobMeta}>{e.startDate}{e.startDate ? " — " : ""}{e.current ? "Present" : e.endDate}</Text>
+                  {e.bullets.map((b, i) => (
+                    <View key={i} style={s.bullet}>
+                      <Text style={s.bulletDot}>•</Text>
+                      <Text style={s.bulletText}>{b}</Text>
+                    </View>
+                  ))}
+                </View>
+              ))}
+            </View>
+          )}
+
+          {/* Education */}
+          {education.length > 0 && (
+            <View style={s.minimalSection}>
+              <Text style={s.minimalSectionTitle}>Education</Text>
+              {education.map((e) => (
+                <View key={e.id} style={s.entryWrap}>
+                  <Text style={s.jobHeader}>{[e.degree, e.school, e.city].filter(Boolean).join(", ")}</Text>
+                  <Text style={s.jobMeta}>{e.startDate}{e.startDate ? " — " : ""}{e.endDate}</Text>
+                  {e.description ? <Text style={s.bodyText}>{e.description}</Text> : null}
+                </View>
+              ))}
+            </View>
+          )}
+
+          {/* Certifications */}
+          {certifications.length > 0 && (
+            <View style={s.minimalSection}>
+              <Text style={s.minimalSectionTitle}>Certifications</Text>
+              {certifications.map((c) => (
+                <View key={c.id} style={s.certRow}>
+                  <View>
+                    <Text style={s.certName}>{c.name}</Text>
+                    {c.issuer ? <Text style={s.certMeta}>{c.issuer}</Text> : null}
+                  </View>
+                  {c.date ? <Text style={s.certDate}>{c.date}</Text> : null}
+                </View>
+              ))}
+            </View>
+          )}
+
+          {/* Skills + Languages/Hobbies in two columns */}
+          <View style={s.minimalBottomRow}>
+            {skills.length > 0 && (
+              <View style={s.minimalCol}>
+                <Text style={s.minimalSectionTitle}>Skills</Text>
+                {skills.map((skill) => (
+                  <View key={skill.id} style={s.minimalSkillRow}>
+                    <Text style={s.minimalSkillName}>{skill.name}</Text>
+                    <View style={s.minimalBarOuter}>
+                      <View style={[s.minimalBarInner, { width: `${skill.level}%` }]} />
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
+            {(languages.length > 0 || hobbies.length > 0) && (
+              <View style={s.minimalCol}>
+                {languages.length > 0 && (
+                  <>
+                    <Text style={s.minimalSectionTitle}>Languages</Text>
+                    {languages.map((lang) => (
+                      <View key={lang.id} style={s.minimalSkillRow}>
+                        <Text style={s.minimalSkillName}>{lang.name}</Text>
+                        <View style={s.minimalBarOuter}>
+                          <View style={[s.minimalBarInner, { width: `${lang.level}%` }]} />
+                        </View>
+                      </View>
+                    ))}
+                  </>
+                )}
+                {hobbies.length > 0 && (
+                  <View style={{ marginTop: languages.length > 0 ? 12 : 0 }}>
+                    <Text style={s.minimalSectionTitle}>Hobbies</Text>
+                    <Text style={s.minimalHobbies}>{hobbies.join(", ")}</Text>
+                  </View>
+                )}
+              </View>
+            )}
+          </View>
+        </Page>
+      </Document>
+    );
+  }
+
   const MainCol = (
     <View style={s.main}>
-      {/* Header */}
-      {t.layout !== "single-column" && (
+      {/* Header: only for sidebar-right (Classic). sidebar-left shows name/photo in the sidebar. */}
+      {t.layout === "sidebar-right" && (
         <View style={s.headerRow}>
           {personalDetails.photoUrl ? (
             <Image src={personalDetails.photoUrl} style={s.photo} />
@@ -131,6 +272,23 @@ export function ResumePdfDocument({ data, templateId = "classic" }: Props) {
 
   const SidebarCol = (
     <View style={s.sidebar}>
+      {/* Name + photo for sidebar-left (Modern) template */}
+      {t.layout === "sidebar-left" && (
+        <View style={{ alignItems: "center", marginBottom: 16 }}>
+          {personalDetails.photoUrl ? (
+            <Image src={personalDetails.photoUrl} style={{ width: 58, height: 58, borderRadius: 29, marginBottom: 8 }} />
+          ) : (
+            <View style={{ width: 58, height: 58, borderRadius: 29, backgroundColor: "rgba(255,255,255,0.2)", marginBottom: 8 }} />
+          )}
+          <Text style={{ ...s.skillName, fontSize: 11, fontFamily: "Helvetica-Bold", textAlign: "center" }}>
+            {personalDetails.fullName}
+          </Text>
+          <Text style={{ ...s.skillName, fontSize: 7, letterSpacing: 1.5, textTransform: "uppercase", opacity: 0.7, marginTop: 3 }}>
+            {personalDetails.jobTitle}
+          </Text>
+        </View>
+      )}
+
       {/* Details */}
       {(personalDetails.address || personalDetails.phone || personalDetails.email) && (
         <View style={s.sidebarSection}>
@@ -198,8 +356,11 @@ export function ResumePdfDocument({ data, templateId = "classic" }: Props) {
 
   return (
     <Document>
-      <Page size="A4" style={s.page}>
-        {t.layout === "sidebar-left" ? <>{SidebarCol}{MainCol}</> : <>{MainCol}{SidebarCol}</>}
+      <Page size="A4" style={{ fontFamily: "Helvetica", fontSize: 9 }}>
+        {/* Wrapper with flex:1 fills the full page so sidebar stretches to bottom */}
+        <View style={{ flex: 1, flexDirection: "row" }}>
+          {t.layout === "sidebar-left" ? <>{SidebarCol}{MainCol}</> : <>{MainCol}{SidebarCol}</>}
+        </View>
       </Page>
     </Document>
   );

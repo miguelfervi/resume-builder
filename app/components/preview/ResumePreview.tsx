@@ -8,6 +8,9 @@ interface Props {
   templateId?: string;
 }
 
+// A4 height in px at 96 dpi — keeps sidebar filling the page
+const A4_H = 1123;
+
 function ProgressBar({ level, color }: { level: number; color: string }) {
   return (
     <div className="w-full h-1.5 rounded-full mt-1" style={{ backgroundColor: "rgba(255,255,255,0.2)" }}>
@@ -16,111 +19,11 @@ function ProgressBar({ level, color }: { level: number; color: string }) {
   );
 }
 
-function MainContent({ data, t }: { data: ResumeData; t: TemplateConfig }) {
-  const { personalDetails, profile, employmentHistory, education, certifications } = data;
-  const borderColor = t.layout === "single-column" ? "#e5e7eb" : "#e2e8f0";
-  const headingStyle = { color: t.layout === "single-column" ? t.accentColor : "#111827" };
-
+function SidebarSection({ title, color, children }: { title: string; color: string; children: React.ReactNode }) {
   return (
-    <div style={{ flex: 2, padding: 32, minWidth: 0 }}>
-      {/* Header (only for sidebar layouts) */}
-      {t.layout !== "single-column" && (
-        <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 24 }}>
-          {personalDetails.photoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={personalDetails.photoUrl} alt="Profile"
-              style={{ width: 72, height: 72, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />
-          ) : (
-            <div style={{ width: 72, height: 72, borderRadius: "50%", backgroundColor: "#d1d5db", flexShrink: 0,
-              display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, color: "#6b7280", fontWeight: 700 }}>
-              {personalDetails.fullName.charAt(0)}
-            </div>
-          )}
-          <div>
-            <div style={{ fontSize: 22, fontWeight: 700, color: "#111827", lineHeight: 1.2 }}>
-              {personalDetails.fullName || "Your Name"}
-            </div>
-            <div style={{ fontSize: 10, letterSpacing: 2, color: "#6b7280", textTransform: "uppercase", marginTop: 4 }}>
-              {personalDetails.jobTitle}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Profile */}
-      {profile && (
-        <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, borderBottom: `1px solid ${borderColor}`, paddingBottom: 4, marginBottom: 8, ...headingStyle }}>
-            Profile
-          </div>
-          <div style={{ fontSize: 10, color: "#4b5563", lineHeight: 1.7 }}>{profile}</div>
-        </div>
-      )}
-
-      {/* Employment */}
-      {employmentHistory.length > 0 && (
-        <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, borderBottom: `1px solid ${borderColor}`, paddingBottom: 4, marginBottom: 12, ...headingStyle }}>
-            Employment History
-          </div>
-          {employmentHistory.map((entry) => (
-            <div key={entry.id} style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 10.5, fontWeight: 700, color: "#111827" }}>
-                {[entry.jobTitle, entry.employer, entry.city].filter(Boolean).join(", ")}
-              </div>
-              <div style={{ fontSize: 8.5, color: "#9ca3af", textTransform: "uppercase", letterSpacing: 0.5, marginTop: 2, marginBottom: 6 }}>
-                {entry.startDate}{entry.startDate && " — "}{entry.current ? "Present" : entry.endDate}
-              </div>
-              {entry.bullets.map((b, i) => (
-                <div key={i} style={{ display: "flex", gap: 6, marginBottom: 3 }}>
-                  <span style={{ fontSize: 10, color: "#6b7280", flexShrink: 0 }}>•</span>
-                  <span style={{ fontSize: 10, color: "#4b5563", lineHeight: 1.6 }}>{b}</span>
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Education */}
-      {education.length > 0 && (
-        <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, borderBottom: `1px solid ${borderColor}`, paddingBottom: 4, marginBottom: 12, ...headingStyle }}>
-            Education
-          </div>
-          {education.map((entry) => (
-            <div key={entry.id} style={{ marginBottom: 10 }}>
-              <div style={{ fontSize: 10.5, fontWeight: 700, color: "#111827" }}>
-                {[entry.degree, entry.school, entry.city].filter(Boolean).join(", ")}
-              </div>
-              <div style={{ fontSize: 8.5, color: "#9ca3af", textTransform: "uppercase", letterSpacing: 0.5, marginTop: 2, marginBottom: 4 }}>
-                {entry.startDate}{entry.startDate && " — "}{entry.endDate}
-              </div>
-              {entry.description && (
-                <div style={{ fontSize: 10, color: "#4b5563", lineHeight: 1.6 }}>{entry.description}</div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Certifications */}
-      {certifications.length > 0 && (
-        <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, borderBottom: `1px solid ${borderColor}`, paddingBottom: 4, marginBottom: 10, ...headingStyle }}>
-            Certifications
-          </div>
-          {certifications.map((c) => (
-            <div key={c.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
-              <div>
-                <span style={{ fontSize: 10.5, fontWeight: 700, color: "#111827" }}>{c.name}</span>
-                {c.issuer && <span style={{ fontSize: 10, color: "#6b7280" }}> · {c.issuer}</span>}
-              </div>
-              {c.date && <span style={{ fontSize: 9, color: "#9ca3af" }}>{c.date}</span>}
-            </div>
-          ))}
-        </div>
-      )}
+    <div className="mb-4">
+      <div className="text-[9px] font-bold tracking-[1.5px] uppercase mb-2" style={{ color }}>{title}</div>
+      {children}
     </div>
   );
 }
@@ -129,42 +32,57 @@ function Sidebar({ data, t }: { data: ResumeData; t: TemplateConfig }) {
   const { personalDetails, skills, languages, hobbies, links } = data;
   const bg = t.sidebarColor;
   const text = t.sidebarTextColor;
-  const dimText = "rgba(255,255,255,0.75)";
+  const dim = "rgba(255,255,255,0.75)";
   const barFill = t.id === "modern" ? "#99f6e4" : "#ffffff";
 
   return (
-    <div style={{ width: 170, flexShrink: 0, backgroundColor: bg, padding: 20, color: text }}>
-      {/* Photo for single-column / sidebar-left */}
-      {(t.layout === "sidebar-left" || t.layout === "single-column") && (
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 20 }}>
+    <div
+      className="flex-shrink-0 self-stretch flex flex-col"
+      style={{ width: 170, backgroundColor: bg, padding: 20, color: text }}
+    >
+      {/* Name + photo shown in sidebar for sidebar-left (Modern) template */}
+      {t.layout === "sidebar-left" && (
+        <div className="flex flex-col items-center mb-5">
           {personalDetails.photoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={personalDetails.photoUrl} alt="" style={{ width: 72, height: 72, borderRadius: "50%", objectFit: "cover", marginBottom: 10 }} />
+            <img
+              src={personalDetails.photoUrl}
+              alt=""
+              className="w-[72px] h-[72px] rounded-full object-cover mb-2.5"
+            />
           ) : (
-            <div style={{ width: 72, height: 72, borderRadius: "50%", backgroundColor: "rgba(255,255,255,0.2)", marginBottom: 10,
-              display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, fontWeight: 700 }}>
+            <div
+              className="w-[72px] h-[72px] rounded-full mb-2.5 flex items-center justify-center text-2xl font-bold"
+              style={{ backgroundColor: "rgba(255,255,255,0.2)" }}
+            >
               {personalDetails.fullName.charAt(0)}
             </div>
           )}
-          <div style={{ fontSize: 16, fontWeight: 700, textAlign: "center", lineHeight: 1.3 }}>{personalDetails.fullName}</div>
-          <div style={{ fontSize: 8, letterSpacing: 1.5, textTransform: "uppercase", opacity: 0.7, marginTop: 4, textAlign: "center" }}>
+          <div className="text-base font-bold text-center leading-snug">{personalDetails.fullName}</div>
+          <div className="text-[8px] tracking-[1.5px] uppercase mt-1 text-center opacity-70">
             {personalDetails.jobTitle}
           </div>
         </div>
       )}
 
       <SidebarSection title="Details" color={text}>
-        {personalDetails.address && <SidebarText color={dimText}>{personalDetails.address}</SidebarText>}
-        {personalDetails.phone && <SidebarText color={dimText}>{personalDetails.phone}</SidebarText>}
-        {personalDetails.email && <SidebarText color={dimText} style={{ wordBreak: "break-all" }}>{personalDetails.email}</SidebarText>}
+        {personalDetails.address && (
+          <div className="text-[9px] leading-relaxed mb-0.5" style={{ color: dim }}>{personalDetails.address}</div>
+        )}
+        {personalDetails.phone && (
+          <div className="text-[9px] leading-relaxed mb-0.5" style={{ color: dim }}>{personalDetails.phone}</div>
+        )}
+        {personalDetails.email && (
+          <div className="text-[9px] leading-relaxed mb-0.5 break-all" style={{ color: dim }}>{personalDetails.email}</div>
+        )}
       </SidebarSection>
 
       {links.length > 0 && (
         <SidebarSection title="Links" color={text}>
           {links.map((l) => (
-            <div key={l.id} style={{ marginBottom: 4 }}>
-              <div style={{ fontSize: 8.5, color: text, fontWeight: 600 }}>{l.label}</div>
-              <div style={{ fontSize: 8, color: dimText, wordBreak: "break-all" }}>{l.url}</div>
+            <div key={l.id} className="mb-1">
+              <div className="text-[9px] font-semibold" style={{ color: text }}>{l.label}</div>
+              <div className="text-[8px] break-all" style={{ color: dim }}>{l.url}</div>
             </div>
           ))}
         </SidebarSection>
@@ -173,8 +91,8 @@ function Sidebar({ data, t }: { data: ResumeData; t: TemplateConfig }) {
       {skills.length > 0 && (
         <SidebarSection title="Skills" color={text}>
           {skills.map((s) => (
-            <div key={s.id} style={{ marginBottom: 6 }}>
-              <div style={{ fontSize: 9, color: text }}>{s.name}</div>
+            <div key={s.id} className="mb-1.5">
+              <div className="text-[9px]" style={{ color: text }}>{s.name}</div>
               <ProgressBar level={s.level} color={barFill} />
             </div>
           ))}
@@ -184,8 +102,8 @@ function Sidebar({ data, t }: { data: ResumeData; t: TemplateConfig }) {
       {languages.length > 0 && (
         <SidebarSection title="Languages" color={text}>
           {languages.map((l) => (
-            <div key={l.id} style={{ marginBottom: 6 }}>
-              <div style={{ fontSize: 9, color: text }}>{l.name}</div>
+            <div key={l.id} className="mb-1.5">
+              <div className="text-[9px]" style={{ color: text }}>{l.name}</div>
               <ProgressBar level={l.level} color={barFill} />
             </div>
           ))}
@@ -194,26 +112,118 @@ function Sidebar({ data, t }: { data: ResumeData; t: TemplateConfig }) {
 
       {hobbies.length > 0 && (
         <SidebarSection title="Hobbies" color={text}>
-          <SidebarText color={dimText}>{hobbies.join(", ")}</SidebarText>
+          <div className="text-[9px] leading-relaxed" style={{ color: dim }}>{hobbies.join(", ")}</div>
         </SidebarSection>
       )}
     </div>
   );
 }
 
-function SidebarSection({ title, color, children }: { title: string; color: string; children: React.ReactNode }) {
+function SectionTitle({ children, color }: { children: React.ReactNode; color: string }) {
   return (
-    <div style={{ marginBottom: 18 }}>
-      <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color, marginBottom: 8 }}>
-        {title}
-      </div>
+    <div className="text-[13px] font-bold border-b pb-1 mb-3 border-gray-200" style={{ color }}>
       {children}
     </div>
   );
 }
 
-function SidebarText({ color, children, style }: { color: string; children: React.ReactNode; style?: React.CSSProperties }) {
-  return <div style={{ fontSize: 9, color, lineHeight: 1.6, marginBottom: 3, ...style }}>{children}</div>;
+function MainContent({ data, t }: { data: ResumeData; t: TemplateConfig }) {
+  const { personalDetails, profile, employmentHistory, education, certifications } = data;
+  const isMinimal = t.layout === "single-column";
+  const headingColor = isMinimal ? t.accentColor : "#111827";
+
+  return (
+    <div className="flex-1 min-w-0 p-8">
+      {/* Header with photo+name: only for sidebar-right (Classic). sidebar-left shows it in the Sidebar. */}
+      {t.layout === "sidebar-right" && (
+        <div className="flex items-center gap-4 mb-6">
+          {personalDetails.photoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={personalDetails.photoUrl}
+              alt="Profile"
+              className="w-[72px] h-[72px] rounded-full object-cover flex-shrink-0"
+            />
+          ) : (
+            <div className="w-[72px] h-[72px] rounded-full bg-gray-300 flex-shrink-0 flex items-center justify-center text-2xl text-gray-500 font-bold">
+              {personalDetails.fullName.charAt(0)}
+            </div>
+          )}
+          <div>
+            <div className="text-[22px] font-bold text-gray-900 leading-tight">
+              {personalDetails.fullName || "Your Name"}
+            </div>
+            <div className="text-[10px] tracking-[2px] text-gray-400 uppercase mt-1">
+              {personalDetails.jobTitle}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {profile && (
+        <div className="mb-5">
+          <SectionTitle color={headingColor}>Profile</SectionTitle>
+          <div className="text-[10px] text-gray-500 leading-[1.7]">{profile}</div>
+        </div>
+      )}
+
+      {employmentHistory.length > 0 && (
+        <div className="mb-5">
+          <SectionTitle color={headingColor}>Employment History</SectionTitle>
+          {employmentHistory.map((entry) => (
+            <div key={entry.id} className="mb-3.5">
+              <div className="text-[10.5px] font-bold text-gray-900">
+                {[entry.jobTitle, entry.employer, entry.city].filter(Boolean).join(", ")}
+              </div>
+              <div className="text-[8.5px] text-gray-400 uppercase tracking-[0.5px] mt-0.5 mb-1.5">
+                {entry.startDate}{entry.startDate && " — "}{entry.current ? "Present" : entry.endDate}
+              </div>
+              {entry.bullets.map((b, i) => (
+                <div key={i} className="flex gap-1.5 mb-0.5">
+                  <span className="text-[10px] text-gray-400 flex-shrink-0">•</span>
+                  <span className="text-[10px] text-gray-500 leading-relaxed">{b}</span>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {education.length > 0 && (
+        <div className="mb-5">
+          <SectionTitle color={headingColor}>Education</SectionTitle>
+          {education.map((entry) => (
+            <div key={entry.id} className="mb-2.5">
+              <div className="text-[10.5px] font-bold text-gray-900">
+                {[entry.degree, entry.school, entry.city].filter(Boolean).join(", ")}
+              </div>
+              <div className="text-[8.5px] text-gray-400 uppercase tracking-[0.5px] mt-0.5 mb-1">
+                {entry.startDate}{entry.startDate && " — "}{entry.endDate}
+              </div>
+              {entry.description && (
+                <div className="text-[10px] text-gray-500 leading-relaxed">{entry.description}</div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {certifications.length > 0 && (
+        <div className="mb-5">
+          <SectionTitle color={headingColor}>Certifications</SectionTitle>
+          {certifications.map((c) => (
+            <div key={c.id} className="flex justify-between items-baseline mb-1.5">
+              <div>
+                <span className="text-[10.5px] font-bold text-gray-900">{c.name}</span>
+                {c.issuer && <span className="text-[10px] text-gray-400"> · {c.issuer}</span>}
+              </div>
+              {c.date && <span className="text-[9px] text-gray-400">{c.date}</span>}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function MinimalLayout({ data, t }: { data: ResumeData; t: TemplateConfig }) {
@@ -221,63 +231,74 @@ function MinimalLayout({ data, t }: { data: ResumeData; t: TemplateConfig }) {
   const accent = t.accentColor;
 
   return (
-    <div style={{ padding: 40, minHeight: "100%", backgroundColor: "#ffffff" }}>
+    <div className="p-10 bg-white" style={{ minHeight: A4_H }}>
       {/* Header */}
-      <div style={{ borderBottom: `3px solid ${accent}`, paddingBottom: 16, marginBottom: 24 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+      <div className="flex items-center justify-between pb-4 mb-6" style={{ borderBottom: `3px solid ${accent}` }}>
+        <div className="flex items-center gap-4">
           {personalDetails.photoUrl && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={personalDetails.photoUrl} alt="" style={{ width: 72, height: 72, borderRadius: "50%", objectFit: "cover" }} />
+            <img src={personalDetails.photoUrl} alt="" className="w-[72px] h-[72px] rounded-full object-cover" />
           )}
           <div>
-            <div style={{ fontSize: 26, fontWeight: 700, color: "#111827" }}>{personalDetails.fullName}</div>
-            <div style={{ fontSize: 11, color: accent, textTransform: "uppercase", letterSpacing: 2, marginTop: 4 }}>{personalDetails.jobTitle}</div>
-          </div>
-          <div style={{ marginLeft: "auto", textAlign: "right" }}>
-            {personalDetails.email && <div style={{ fontSize: 9, color: "#6b7280" }}>{personalDetails.email}</div>}
-            {personalDetails.phone && <div style={{ fontSize: 9, color: "#6b7280" }}>{personalDetails.phone}</div>}
-            {personalDetails.address && <div style={{ fontSize: 9, color: "#6b7280" }}>{personalDetails.address}</div>}
-            {links.map((l) => <div key={l.id} style={{ fontSize: 9, color: "#6b7280" }}>{l.label}: {l.url}</div>)}
+            <div className="text-2xl font-bold text-gray-900">{personalDetails.fullName}</div>
+            <div className="text-[11px] uppercase tracking-[2px] mt-1" style={{ color: accent }}>
+              {personalDetails.jobTitle}
+            </div>
           </div>
         </div>
+        <div className="text-right">
+          {personalDetails.email && <div className="text-[9px] text-gray-400">{personalDetails.email}</div>}
+          {personalDetails.phone && <div className="text-[9px] text-gray-400">{personalDetails.phone}</div>}
+          {personalDetails.address && <div className="text-[9px] text-gray-400">{personalDetails.address}</div>}
+          {links.map((l) => (
+            <div key={l.id} className="text-[9px] text-gray-400">{l.label}: {l.url}</div>
+          ))}
+        </div>
       </div>
-      {/* Reuse main content */}
+
       <MainContent data={data} t={t} />
-      {/* Skills & Languages in two columns */}
-      <div style={{ display: "flex", gap: 32, marginTop: 8 }}>
+
+      {/* Skills & Languages/Hobbies in two columns */}
+      <div className="flex gap-8 mt-2">
         {skills.length > 0 && (
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: accent, borderBottom: `1px solid #e5e7eb`, paddingBottom: 4, marginBottom: 10 }}>Skills</div>
+          <div className="flex-1">
+            <div className="text-[13px] font-bold border-b border-gray-200 pb-1 mb-2.5" style={{ color: accent }}>
+              Skills
+            </div>
             {skills.map((s) => (
-              <div key={s.id} style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                <span style={{ fontSize: 10, color: "#374151" }}>{s.name}</span>
-                <div style={{ width: 80, height: 4, backgroundColor: "#e5e7eb", borderRadius: 2, marginTop: 4 }}>
-                  <div style={{ height: 4, backgroundColor: accent, borderRadius: 2, width: `${s.level}%` }} />
+              <div key={s.id} className="flex justify-between items-center mb-1.5">
+                <span className="text-[10px] text-gray-700">{s.name}</span>
+                <div className="w-20 h-1 bg-gray-200 rounded-full">
+                  <div className="h-1 rounded-full" style={{ backgroundColor: accent, width: `${s.level}%` }} />
                 </div>
               </div>
             ))}
           </div>
         )}
         {(languages.length > 0 || hobbies.length > 0) && (
-          <div style={{ flex: 1 }}>
+          <div className="flex-1">
             {languages.length > 0 && (
               <>
-                <div style={{ fontSize: 13, fontWeight: 700, color: accent, borderBottom: `1px solid #e5e7eb`, paddingBottom: 4, marginBottom: 10 }}>Languages</div>
+                <div className="text-[13px] font-bold border-b border-gray-200 pb-1 mb-2.5" style={{ color: accent }}>
+                  Languages
+                </div>
                 {languages.map((l) => (
-                  <div key={l.id} style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                    <span style={{ fontSize: 10, color: "#374151" }}>{l.name}</span>
-                    <div style={{ width: 80, height: 4, backgroundColor: "#e5e7eb", borderRadius: 2, marginTop: 4 }}>
-                      <div style={{ height: 4, backgroundColor: accent, borderRadius: 2, width: `${l.level}%` }} />
+                  <div key={l.id} className="flex justify-between items-center mb-1.5">
+                    <span className="text-[10px] text-gray-700">{l.name}</span>
+                    <div className="w-20 h-1 bg-gray-200 rounded-full">
+                      <div className="h-1 rounded-full" style={{ backgroundColor: accent, width: `${l.level}%` }} />
                     </div>
                   </div>
                 ))}
               </>
             )}
             {hobbies.length > 0 && (
-              <>
-                <div style={{ fontSize: 13, fontWeight: 700, color: accent, borderBottom: `1px solid #e5e7eb`, paddingBottom: 4, marginBottom: 8, marginTop: 12 }}>Hobbies</div>
-                <div style={{ fontSize: 10, color: "#4b5563" }}>{hobbies.join(", ")}</div>
-              </>
+              <div className={languages.length > 0 ? "mt-3" : ""}>
+                <div className="text-[13px] font-bold border-b border-gray-200 pb-1 mb-2" style={{ color: accent }}>
+                  Hobbies
+                </div>
+                <div className="text-[10px] text-gray-500">{hobbies.join(", ")}</div>
+              </div>
             )}
           </div>
         )}
@@ -291,7 +312,7 @@ export function ResumePreview({ data, templateId = "classic" }: Props) {
 
   if (t.layout === "single-column") {
     return (
-      <div style={{ width: "100%", minHeight: "100%", backgroundColor: "#ffffff", fontFamily: "Arial, Helvetica, sans-serif" }}>
+      <div className="w-full bg-white" style={{ fontFamily: "Arial, Helvetica, sans-serif" }}>
         <MinimalLayout data={data} t={t} />
       </div>
     );
@@ -301,7 +322,10 @@ export function ResumePreview({ data, templateId = "classic" }: Props) {
   const main = <MainContent data={data} t={t} />;
 
   return (
-    <div style={{ width: "100%", minHeight: "100%", backgroundColor: "#ffffff", fontFamily: "Arial, Helvetica, sans-serif", display: "flex" }}>
+    <div
+      className="w-full flex items-stretch bg-white"
+      style={{ fontFamily: "Arial, Helvetica, sans-serif", minHeight: A4_H }}
+    >
       {t.layout === "sidebar-left" ? <>{sidebar}{main}</> : <>{main}{sidebar}</>}
     </div>
   );
