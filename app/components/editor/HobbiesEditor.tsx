@@ -1,6 +1,8 @@
 "use client";
 
+import { useRef } from "react";
 import { CollapsibleSection } from "./CollapsibleSection";
+import { SortableList } from "./SortableList";
 
 interface Props {
   hobbies: string[];
@@ -8,43 +10,59 @@ interface Props {
 }
 
 export function HobbiesEditor({ hobbies, onChange }: Props) {
+  // Stable IDs for each hobby position (hobbies are plain strings, not objects)
+  const hobbyIds = useRef<string[]>([]);
+  while (hobbyIds.current.length < hobbies.length) hobbyIds.current.push(crypto.randomUUID());
+  hobbyIds.current.length = hobbies.length;
+
+  const items = hobbies.map((value, i) => ({ id: hobbyIds.current[i], value }));
+
   function addHobby() {
     onChange([...hobbies, ""]);
   }
 
-  function updateHobby(index: number, value: string) {
+  function updateHobby(id: string, value: string) {
+    const i = hobbyIds.current.indexOf(id);
+    if (i === -1) return;
     const updated = [...hobbies];
-    updated[index] = value;
+    updated[i] = value;
     onChange(updated);
   }
 
-  function removeHobby(index: number) {
-    onChange(hobbies.filter((_, i) => i !== index));
+  function removeHobby(id: string) {
+    const i = hobbyIds.current.indexOf(id);
+    if (i === -1) return;
+    hobbyIds.current.splice(i, 1);
+    onChange(hobbies.filter((_, idx) => idx !== i));
   }
 
   return (
     <CollapsibleSection title="Hobbies">
       <div className="space-y-2">
-        {hobbies.map((hobby, i) => (
-          <div key={i} className="flex items-center gap-2">
-            <input
-              type="text"
-              value={hobby}
-              onChange={(e) => updateHobby(i, e.target.value)}
-              placeholder="Music, Travel, etc."
-              className="flex-1 border border-gray-200 rounded px-2 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-400 transition-colors"
-            />
-            <button
-              type="button"
-              onClick={() => removeHobby(i)}
-              className="text-gray-300 hover:text-red-400 transition-colors flex-shrink-0"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        ))}
+        <SortableList
+          items={items}
+          onReorder={(reordered) => onChange(reordered.map((h) => h.value))}
+          renderItem={(item) => (
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={item.value}
+                onChange={(e) => updateHobby(item.id, e.target.value)}
+                placeholder="Music, Travel, etc."
+                className="flex-1 border border-gray-200 rounded px-2 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-400 transition-colors"
+              />
+              <button
+                type="button"
+                onClick={() => removeHobby(item.id)}
+                className="text-gray-300 hover:text-red-400 transition-colors flex-shrink-0"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          )}
+        />
         <button
           type="button"
           onClick={addHobby}

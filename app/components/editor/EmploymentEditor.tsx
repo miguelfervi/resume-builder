@@ -2,6 +2,7 @@
 
 import { EmploymentEntry } from "@/app/types/resume";
 import { CollapsibleSection } from "./CollapsibleSection";
+import { SortableList } from "./SortableList";
 
 interface Props {
   entries: EmploymentEntry[];
@@ -202,14 +203,17 @@ export function EmploymentEditor({ entries, onChange }: Props) {
   return (
     <CollapsibleSection title="Employment History">
       <div className="space-y-3">
-        {entries.map((entry) => (
-          <EntryEditor
-            key={entry.id}
-            entry={entry}
-            onChange={(updated) => updateEntry(entry.id, updated)}
-            onRemove={() => removeEntry(entry.id)}
-          />
-        ))}
+        <SortableList
+          items={entries}
+          onReorder={onChange}
+          renderItem={(entry) => (
+            <EntryEditor
+              entry={entry}
+              onChange={(updated) => updateEntry(entry.id, updated)}
+              onRemove={() => removeEntry(entry.id)}
+            />
+          )}
+        />
         <button
           type="button"
           onClick={addEntry}

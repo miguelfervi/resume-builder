@@ -2,13 +2,9 @@
 
 import { useEffect, useCallback } from "react";
 import { ResumeData, AppState, SavedResume } from "@/app/types/resume";
-import { createBlankResumeData } from "@/app/lib/default-data";
+import { createDefaultResumeData } from "@/app/lib/default-data";
 import { loadAppState, saveAppState, clearAppState, createInitialAppState } from "@/app/lib/storage";
 import { useUndoRedo } from "./use-undo-redo";
-
-function createInitial(): AppState {
-  return loadAppState() ?? createInitialAppState();
-}
 
 export function useResume() {
   const { value: appState, setValue: setAppState, undo, redo, reset, canUndo, canRedo } = useUndoRedo<AppState>(
@@ -18,8 +14,7 @@ export function useResume() {
 
   // Hydrate from localStorage once
   useEffect(() => {
-    const saved = createInitial();
-    reset(saved);
+    reset(loadAppState() ?? createInitialAppState());
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -59,7 +54,7 @@ export function useResume() {
       id: crypto.randomUUID(),
       name,
       templateId: "classic",
-      data: createBlankResumeData(),
+      data: createDefaultResumeData(),
       createdAt: now,
       updatedAt: now,
     };

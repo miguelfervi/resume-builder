@@ -8,9 +8,11 @@ const PAGE_GAP = 16; // px gap between pages
 
 interface Props {
   children: ReactNode;
+  /** When true, always renders exactly one page and scales content down to fit if it overflows */
+  singlePage?: boolean;
 }
 
-export function A4Container({ children }: Props) {
+export function A4Container({ children, singlePage = false }: Props) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const measureRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
@@ -38,7 +40,12 @@ export function A4Container({ children }: Props) {
     return () => ro.disconnect();
   }, []);
 
-  const numPages = Math.max(1, Math.ceil(totalHeight / PAGE_H));
+  // In singlePage mode, shrink content so it always fits in one A4 page
+  const finalScale = singlePage && totalHeight > PAGE_H
+    ? (PAGE_H * scale) / totalHeight
+    : scale;
+
+  const numPages = singlePage ? 1 : Math.max(1, Math.ceil(totalHeight / PAGE_H));
 
   return (
     <div ref={wrapperRef} style={{ width: "100%", position: "relative" }}>
@@ -79,7 +86,7 @@ export function A4Container({ children }: Props) {
                 top: 0,
                 left: 0,
                 width: PAGE_W,
-                transform: `scale(${scale}) translateY(${-i * PAGE_H}px)`,
+                transform: `scale(${finalScale}) translateY(${-i * PAGE_H}px)`,
                 transformOrigin: "top left",
               }}
             >

@@ -71,7 +71,7 @@ export default function Home() {
         </div>
 
         <div className="w-full max-w-2xl">
-          <A4Container>
+          <A4Container singlePage={templateId === "minimal"}>
             <ResumePreview data={data} templateId={templateId} />
           </A4Container>
         </div>

@@ -6,8 +6,8 @@ function makeStyles(t: TemplateConfig) {
   return StyleSheet.create({
     page: { flexDirection: "row", fontFamily: "Helvetica", fontSize: 9 },
     main: { flex: 2, padding: 28 },
-    sidebar: { width: 150, padding: 18, backgroundColor: t.sidebarColor, color: t.sidebarTextColor },
-    singlePage: { flex: 1, padding: 36, fontFamily: "Helvetica" },
+    sidebar: { width: 150, padding: 18, color: t.sidebarTextColor },
+    singlePage: { flex: 1, padding: 24, fontFamily: "Helvetica" },
     // Header
     headerRow: { flexDirection: "row", alignItems: "center", marginBottom: 18, gap: 12 },
     photo: { width: 58, height: 58, borderRadius: 29 },
@@ -46,8 +46,8 @@ function makeStyles(t: TemplateConfig) {
     minimalJobTitle: { fontSize: 9, letterSpacing: 2, color: t.accentColor, textTransform: "uppercase", marginTop: 4 },
     minimalContact: { fontSize: 8, color: "#6b7280", textAlign: "right", marginBottom: 2 },
     minimalSectionTitle: { fontSize: 11, fontFamily: "Helvetica-Bold", color: t.accentColor, borderBottom: 1, borderBottomColor: "#e5e7eb", paddingBottom: 3, marginBottom: 8 },
-    minimalSection: { marginBottom: 16 },
-    minimalBottomRow: { flexDirection: "row", gap: 20, marginTop: 8 },
+    minimalSection: { marginBottom: 10 },
+    minimalTwoCol: { flexDirection: "row", gap: 20, marginTop: 8 },
     minimalCol: { flex: 1 },
     minimalSkillRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 5 },
     minimalSkillName: { fontSize: 9, color: "#374151" },
@@ -150,45 +150,59 @@ export function ResumePdfDocument({ data, templateId = "classic" }: Props) {
             </View>
           )}
 
-          {/* Skills + Languages/Hobbies in two columns */}
-          <View style={s.minimalBottomRow}>
-            {skills.length > 0 && (
-              <View style={s.minimalCol}>
-                <Text style={s.minimalSectionTitle}>Skills</Text>
-                {skills.map((skill) => (
-                  <View key={skill.id} style={s.minimalSkillRow}>
-                    <Text style={s.minimalSkillName}>{skill.name}</Text>
-                    <View style={s.minimalBarOuter}>
-                      <View style={[s.minimalBarInner, { width: `${skill.level}%` }]} />
-                    </View>
-                  </View>
-                ))}
-              </View>
-            )}
-            {(languages.length > 0 || hobbies.length > 0) && (
-              <View style={s.minimalCol}>
-                {languages.length > 0 && (
-                  <>
-                    <Text style={s.minimalSectionTitle}>Languages</Text>
-                    {languages.map((lang) => (
-                      <View key={lang.id} style={s.minimalSkillRow}>
-                        <Text style={s.minimalSkillName}>{lang.name}</Text>
-                        <View style={s.minimalBarOuter}>
-                          <View style={[s.minimalBarInner, { width: `${lang.level}%` }]} />
-                        </View>
+          {/* Skills — 2 columnas para no desbordar verticalmente */}
+          {skills.length > 0 && (
+            <View style={s.minimalSection}>
+              <Text style={s.minimalSectionTitle}>Skills</Text>
+              <View style={{ flexDirection: "row", gap: 20 }}>
+                <View style={{ flex: 1 }}>
+                  {skills.slice(0, Math.ceil(skills.length / 2)).map((skill) => (
+                    <View key={skill.id} style={s.minimalSkillRow}>
+                      <Text style={s.minimalSkillName}>{skill.name}</Text>
+                      <View style={s.minimalBarOuter}>
+                        <View style={[s.minimalBarInner, { width: `${skill.level}%` }]} />
                       </View>
-                    ))}
-                  </>
-                )}
-                {hobbies.length > 0 && (
-                  <View style={{ marginTop: languages.length > 0 ? 12 : 0 }}>
-                    <Text style={s.minimalSectionTitle}>Hobbies</Text>
-                    <Text style={s.minimalHobbies}>{hobbies.join(", ")}</Text>
-                  </View>
-                )}
+                    </View>
+                  ))}
+                </View>
+                <View style={{ flex: 1 }}>
+                  {skills.slice(Math.ceil(skills.length / 2)).map((skill) => (
+                    <View key={skill.id} style={s.minimalSkillRow}>
+                      <Text style={s.minimalSkillName}>{skill.name}</Text>
+                      <View style={s.minimalBarOuter}>
+                        <View style={[s.minimalBarInner, { width: `${skill.level}%` }]} />
+                      </View>
+                    </View>
+                  ))}
+                </View>
               </View>
-            )}
-          </View>
+            </View>
+          )}
+
+          {/* Languages + Hobbies en dos columnas */}
+          {(languages.length > 0 || hobbies.length > 0) && (
+            <View style={s.minimalTwoCol}>
+              {languages.length > 0 && (
+                <View style={s.minimalCol}>
+                  <Text style={s.minimalSectionTitle}>Languages</Text>
+                  {languages.map((lang) => (
+                    <View key={lang.id} style={s.minimalSkillRow}>
+                      <Text style={s.minimalSkillName}>{lang.name}</Text>
+                      <View style={s.minimalBarOuter}>
+                        <View style={[s.minimalBarInner, { width: `${lang.level}%` }]} />
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              )}
+              {hobbies.length > 0 && (
+                <View style={s.minimalCol}>
+                  <Text style={s.minimalSectionTitle}>Hobbies</Text>
+                  <Text style={s.minimalHobbies}>{hobbies.join(", ")}</Text>
+                </View>
+              )}
+            </View>
+          )}
         </Page>
       </Document>
     );
@@ -356,8 +370,19 @@ export function ResumePdfDocument({ data, templateId = "classic" }: Props) {
 
   return (
     <Document>
-      <Page size="A4" style={{ fontFamily: "Helvetica", fontSize: 9 }}>
-        {/* Wrapper with flex:1 fills the full page so sidebar stretches to bottom */}
+      <Page size="A4" style={{ fontFamily: "Helvetica", fontSize: 9, paddingTop: 24, paddingBottom: 24 }}>
+        {/* Sidebar background — fixed so it fills the full page height on every page, ignoring padding */}
+        <View
+          fixed
+          style={{
+            position: "absolute",
+            top: 0,
+            bottom: 0,
+            ...(t.layout === "sidebar-left" ? { left: 0 } : { right: 0 }),
+            width: 150,
+            backgroundColor: t.sidebarColor,
+          }}
+        />
         <View style={{ flex: 1, flexDirection: "row" }}>
           {t.layout === "sidebar-left" ? <>{SidebarCol}{MainCol}</> : <>{MainCol}{SidebarCol}</>}
         </View>

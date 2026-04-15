@@ -258,13 +258,13 @@ function MinimalLayout({ data, t }: { data: ResumeData; t: TemplateConfig }) {
 
       <MainContent data={data} t={t} />
 
-      {/* Skills & Languages/Hobbies in two columns */}
-      <div className="flex gap-8 mt-2">
-        {skills.length > 0 && (
-          <div className="flex-1">
-            <div className="text-[13px] font-bold border-b border-gray-200 pb-1 mb-2.5" style={{ color: accent }}>
-              Skills
-            </div>
+      {/* Skills — 2 columnas para no desbordar verticalmente */}
+      {skills.length > 0 && (
+        <div className="mt-2 mb-5">
+          <div className="text-[13px] font-bold border-b border-gray-200 pb-1 mb-2.5" style={{ color: accent }}>
+            Skills
+          </div>
+          <div className="grid grid-cols-2 gap-x-8">
             {skills.map((s) => (
               <div key={s.id} className="flex justify-between items-center mb-1.5">
                 <span className="text-[10px] text-gray-700">{s.name}</span>
@@ -274,35 +274,37 @@ function MinimalLayout({ data, t }: { data: ResumeData; t: TemplateConfig }) {
               </div>
             ))}
           </div>
-        )}
-        {(languages.length > 0 || hobbies.length > 0) && (
-          <div className="flex-1">
-            {languages.length > 0 && (
-              <>
-                <div className="text-[13px] font-bold border-b border-gray-200 pb-1 mb-2.5" style={{ color: accent }}>
-                  Languages
-                </div>
-                {languages.map((l) => (
-                  <div key={l.id} className="flex justify-between items-center mb-1.5">
-                    <span className="text-[10px] text-gray-700">{l.name}</span>
-                    <div className="w-20 h-1 bg-gray-200 rounded-full">
-                      <div className="h-1 rounded-full" style={{ backgroundColor: accent, width: `${l.level}%` }} />
-                    </div>
-                  </div>
-                ))}
-              </>
-            )}
-            {hobbies.length > 0 && (
-              <div className={languages.length > 0 ? "mt-3" : ""}>
-                <div className="text-[13px] font-bold border-b border-gray-200 pb-1 mb-2" style={{ color: accent }}>
-                  Hobbies
-                </div>
-                <div className="text-[10px] text-gray-500">{hobbies.join(", ")}</div>
+        </div>
+      )}
+
+      {/* Languages + Hobbies en dos columnas */}
+      {(languages.length > 0 || hobbies.length > 0) && (
+        <div className="flex gap-8 mt-2">
+          {languages.length > 0 && (
+            <div className="flex-1">
+              <div className="text-[13px] font-bold border-b border-gray-200 pb-1 mb-2.5" style={{ color: accent }}>
+                Languages
               </div>
-            )}
-          </div>
-        )}
-      </div>
+              {languages.map((l) => (
+                <div key={l.id} className="flex justify-between items-center mb-1.5">
+                  <span className="text-[10px] text-gray-700">{l.name}</span>
+                  <div className="w-20 h-1 bg-gray-200 rounded-full">
+                    <div className="h-1 rounded-full" style={{ backgroundColor: accent, width: `${l.level}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          {hobbies.length > 0 && (
+            <div className="flex-1">
+              <div className="text-[13px] font-bold border-b border-gray-200 pb-1 mb-2" style={{ color: accent }}>
+                Hobbies
+              </div>
+              <div className="text-[10px] text-gray-500">{hobbies.join(", ")}</div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

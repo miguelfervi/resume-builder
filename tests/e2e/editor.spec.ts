@@ -79,13 +79,9 @@ test.describe("Employment history", () => {
     await page.getByRole("button", { name: "+ Add job" }).click();
     await expect(page.getByPlaceholder("Front-End Engineer").first()).toBeVisible();
 
-    // Click the delete (trash) button inside the entry — it has the trash icon SVG
     const entryCard = page.locator(".border.border-gray-100.rounded-lg").first();
-    const deleteBtn = entryCard.locator('button[title=""]').first();
-    // The delete button is the second button in the card header row
-    await entryCard.locator("button").first().click({ force: true }); // first button is the "Job" label delete
+    await entryCard.locator("button").first().click({ force: true });
 
-    // After delete, the entry is gone
     await expect(page.getByPlaceholder("Front-End Engineer")).toHaveCount(0);
   });
 
@@ -130,17 +126,18 @@ test.describe("Template selector", () => {
 });
 
 test.describe("Full preview modal", () => {
-  test("Full Preview button opens the modal", async ({ page }) => {
+  test("Full Preview button opens the modal with a PDF viewer", async ({ page }) => {
     await page.getByRole("button", { name: /Full Preview/i }).click();
-    // The modal contains a close button
-    await expect(page.getByRole("button", { name: /close/i })).toBeVisible({ timeout: 3000 });
+    // Modal header bar is always visible with close button and label
+    await expect(page.getByText("PDF Preview")).toBeVisible({ timeout: 3000 });
+    await expect(page.getByRole("button", { name: /close/i })).toBeVisible();
   });
 
   test("modal closes with the close button", async ({ page }) => {
     await page.getByRole("button", { name: /Full Preview/i }).click();
+    await expect(page.getByRole("button", { name: /close/i })).toBeVisible({ timeout: 3000 });
     await page.getByRole("button", { name: /close/i }).click();
-    // Modal is dismissed
-    await expect(page.getByRole("button", { name: /close/i })).not.toBeVisible({ timeout: 2000 });
+    await expect(page.getByText("PDF Preview")).not.toBeVisible({ timeout: 2000 });
   });
 });
 

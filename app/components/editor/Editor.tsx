@@ -13,7 +13,6 @@ import { LanguagesEditor } from "./LanguagesEditor";
 import { HobbiesEditor } from "./HobbiesEditor";
 import { ResumeSelector } from "./ResumeSelector";
 import { TemplateSelector } from "./TemplateSelector";
-import { JsonExportImport } from "./JsonExportImport";
 
 interface Props {
   data: ResumeData;
@@ -40,8 +39,6 @@ export function Editor({
   resumes, activeId, onSwitch, onCreate, onDuplicate, onDelete, onRename,
   canUndo, canRedo, onUndo, onRedo,
 }: Props) {
-  const activeResume = resumes.find((r) => r.id === activeId);
-
   return (
     <div className="space-y-3">
       {/* Header */}
@@ -77,13 +74,6 @@ export function Editor({
 
       {/* Template selector */}
       <TemplateSelector templateId={templateId} onChange={onTemplateChange} />
-
-      {/* Export/Import */}
-      <JsonExportImport
-        data={data}
-        resumeName={activeResume?.name ?? "resume"}
-        onImport={(imported) => onChange(imported)}
-      />
 
       <div className="border-t border-gray-100 pt-3 space-y-3">
         <PersonalDetailsEditor data={data.personalDetails} onChange={(personalDetails) => onChange({ ...data, personalDetails })} />

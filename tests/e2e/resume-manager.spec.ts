@@ -1,7 +1,4 @@
 import { test, expect } from "@playwright/test";
-import path from "path";
-import fs from "fs";
-import os from "os";
 
 test.beforeEach(async ({ page }) => {
   await page.goto("/");
@@ -68,53 +65,6 @@ test.describe("Multi-CV management", () => {
 
     // Selector now shows the new name
     await expect(page.locator("button").filter({ hasText: "Awesome CV" }).first()).toBeVisible();
-  });
-});
-
-test.describe("Export / Import JSON", () => {
-  test("Export button triggers a file download", async ({ page }) => {
-    const downloadPromise = page.waitForEvent("download");
-    await page.getByTitle("Export JSON").click();
-    const download = await downloadPromise;
-
-    expect(download.suggestedFilename()).toMatch(/\.json$/);
-  });
-
-  test("Import button shows an error for invalid JSON", async ({ page }) => {
-    // Create a temp file with invalid JSON
-    const tmpFile = path.join(os.tmpdir(), "invalid.json");
-    fs.writeFileSync(tmpFile, "not valid json }{");
-
-    // Set the file on the hidden file input directly
-    const fileInput = page.locator('input[type="file"][accept*="json"]');
-    await fileInput.setInputFiles(tmpFile);
-
-    await expect(page.getByText("Invalid JSON file")).toBeVisible({ timeout: 3000 });
-
-    fs.unlinkSync(tmpFile);
-  });
-
-  test("Import loads valid resume data", async ({ page }) => {
-    // First, fill some data so we have something to export
-    await page.getByPlaceholder("Your name").fill("Import Test User");
-
-    // Export current data
-    const downloadPromise = page.waitForEvent("download");
-    await page.getByTitle("Export JSON").click();
-    const download = await downloadPromise;
-
-    // Save download to a temp file
-    const tmpFile = path.join(os.tmpdir(), "resume_export.json");
-    await download.saveAs(tmpFile);
-
-    // Clear name, then import
-    await page.getByPlaceholder("Your name").fill("");
-    await page.locator('input[type="file"][accept*="json"]').setInputFiles(tmpFile);
-
-    // The imported name should reappear
-    await expect(page.getByPlaceholder("Your name")).toHaveValue("Import Test User", { timeout: 3000 });
-
-    fs.unlinkSync(tmpFile);
   });
 });
 
