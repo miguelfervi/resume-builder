@@ -5,9 +5,10 @@ import { ResumeData } from "@/app/types/resume";
 
 interface Props {
   data: ResumeData;
+  templateId?: string;
 }
 
-export function PdfDownloadButton({ data }: Props) {
+export function PdfDownloadButton({ data, templateId = "classic" }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -17,7 +18,7 @@ export function PdfDownloadButton({ data }: Props) {
     try {
       const { pdf } = await import("@react-pdf/renderer");
       const { ResumePdfDocument } = await import("./ResumePdfDocument");
-      const blob = await pdf(<ResumePdfDocument data={data} />).toBlob();
+      const blob = await pdf(<ResumePdfDocument data={data} templateId={templateId} />).toBlob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -34,12 +35,8 @@ export function PdfDownloadButton({ data }: Props) {
 
   return (
     <div className="flex flex-col items-end gap-1">
-      <button
-        type="button"
-        onClick={handleDownload}
-        disabled={loading}
-        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors shadow-sm"
-      >
+      <button type="button" onClick={handleDownload} disabled={loading}
+        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors shadow-sm">
         {loading ? (
           <>
             <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
