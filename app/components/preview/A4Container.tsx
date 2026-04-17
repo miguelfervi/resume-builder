@@ -4,97 +4,85 @@ import { useRef, useEffect, useState, ReactNode } from "react";
 
 const PAGE_W = 794;
 const PAGE_H = 1123;
-const PAGE_GAP = 16; // px gap between pages
+const SEP_H = 8;
 
 interface Props {
   children: ReactNode;
-  /** When true, always renders exactly one page and scales content down to fit if it overflows */
   singlePage?: boolean;
 }
 
 export function A4Container({ children, singlePage = false }: Props) {
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const measureRef = useRef<HTMLDivElement>(null);
+  const innerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
-  const [totalHeight, setTotalHeight] = useState(PAGE_H);
+  const [naturalH, setNaturalH] = useState(PAGE_H);
 
-  // Scale from available width
   useEffect(() => {
-    const el = wrapperRef.current;
-    if (!el) return;
-    const ro = new ResizeObserver(([entry]) => {
-      setScale(entry.contentRect.width / PAGE_W);
-    });
-    ro.observe(el);
+    const wrapper = wrapperRef.current;
+    if (!wrapper) return;
+    const ro = new ResizeObserver(() => setScale(wrapper.offsetWidth / PAGE_W));
+    ro.observe(wrapper);
+    setScale(wrapper.offsetWidth / PAGE_W);
     return () => ro.disconnect();
   }, []);
 
-  // Measure true content height at full A4 width (no scaling)
   useEffect(() => {
-    const el = measureRef.current;
-    if (!el) return;
-    const ro = new ResizeObserver(([entry]) => {
-      setTotalHeight(entry.contentRect.height);
-    });
-    ro.observe(el);
+    const inner = innerRef.current;
+    if (!inner) return;
+    const ro = new ResizeObserver(() => setNaturalH(inner.scrollHeight));
+    ro.observe(inner);
+    setNaturalH(inner.scrollHeight);
     return () => ro.disconnect();
   }, []);
 
-  // In singlePage mode, shrink content so it always fits in one A4 page
-  const finalScale = singlePage && totalHeight > PAGE_H
-    ? (PAGE_H * scale) / totalHeight
+  const finalScale = singlePage && naturalH > PAGE_H
+    ? (PAGE_H / naturalH) * scale
     : scale;
 
-  const numPages = singlePage ? 1 : Math.max(1, Math.ceil(totalHeight / PAGE_H));
+  const numPages = singlePage ? 1 : Math.max(1, Math.ceil(naturalH / PAGE_H));
+  const wrapperH = singlePage
+    ? PAGE_H * scale
+    : naturalH * scale + (numPages - 1) * SEP_H;
 
   return (
-    <div ref={wrapperRef} style={{ width: "100%", position: "relative" }}>
-      {/* Hidden div at real A4 width — measures content height without scaling */}
+    <div ref={wrapperRef} style={{ width: "100%", position: "relative", height: wrapperH }}>
       <div
-        aria-hidden
+        ref={innerRef}
         style={{
-          position: "fixed",
-          top: -99999,
-          left: 0,
           width: PAGE_W,
-          opacity: 0,
-          pointerEvents: "none",
-          zIndex: -1,
+          transformOrigin: "top left",
+          transform: `scale(${finalScale})`,
+          backgroundColor: "#ffffff",
+          boxShadow: "0 4px 24px rgba(0,0,0,0.12)",
+          position: "absolute",
+          top: 0,
+          left: 0,
         }}
       >
-        <div ref={measureRef}>{children}</div>
+        {children}
       </div>
 
-      {/* One box per page */}
-      <div style={{ display: "flex", flexDirection: "column", gap: PAGE_GAP }}>
-        {Array.from({ length: numPages }, (_, i) => (
-          <div
-            key={i}
-            style={{
-              width: "100%",
-              height: PAGE_H * scale,
-              overflow: "hidden",
-              position: "relative",
-              backgroundColor: "#ffffff",
-              boxShadow: "0 4px 24px rgba(0,0,0,0.12)",
-            }}
-          >
-            {/* Full content shifted upward so the correct "slice" is visible */}
-            <div
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                width: PAGE_W,
-                transform: `scale(${finalScale}) translateY(${-i * PAGE_H}px)`,
-                transformOrigin: "top left",
-              }}
-            >
-              {children}
-            </div>
-          </div>
-        ))}
-      </div>
+      {/* Page break indicators */}
+      {!singlePage && Array.from({ length: numPages - 1 }, (_, i) => (
+        <div
+          key={i}
+          style={{
+            position: "absolute",
+            top: (i + 1) * PAGE_H * scale + i * SEP_H,
+            left: 0,
+            right: 0,
+            height: SEP_H,
+            backgroundColor: "#e5e7eb",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <span style={{ fontSize: 9, color: "#9ca3af", userSelect: "none" }}>
+            Page {i + 2}
+          </span>
+        </div>
+      ))}
     </div>
   );
 }
