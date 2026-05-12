@@ -11,7 +11,7 @@ interface Props {
 
 export function SkillsEditor({ skills, onChange }: Props) {
   function addSkill() {
-    onChange([...skills, { id: crypto.randomUUID(), name: "", level: 75 }]);
+    onChange([...skills, { id: crypto.randomUUID(), name: "", level: 75, category: "" }]);
   }
 
   function updateSkill(id: string, updates: Partial<Skill>) {
@@ -48,6 +48,13 @@ export function SkillsEditor({ skills, onChange }: Props) {
                   </svg>
                 </button>
               </div>
+              <input
+                type="text"
+                value={skill.category ?? ""}
+                onChange={(e) => updateSkill(skill.id, { category: e.target.value })}
+                placeholder="Category (e.g. Front-End)"
+                className="w-full border border-gray-100 rounded px-2 py-1 text-[11px] text-gray-500 focus:outline-none focus:border-blue-300 transition-colors bg-gray-50"
+              />
               <div className="flex items-center gap-2 px-0.5">
                 <input
                   type="range"

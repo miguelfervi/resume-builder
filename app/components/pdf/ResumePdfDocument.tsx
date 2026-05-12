@@ -1,6 +1,16 @@
 import { Document, Page, View, Text, Image, StyleSheet, Link } from "@react-pdf/renderer";
-import { ResumeData } from "@/app/types/resume";
+import { ResumeData, Skill } from "@/app/types/resume";
 import { getTemplate, TemplateConfig } from "@/app/lib/templates";
+
+function groupSkills(skills: Skill[]): [string, Skill[]][] {
+  const map = new Map<string, Skill[]>();
+  for (const s of skills) {
+    const cat = s.category?.trim() || "";
+    if (!map.has(cat)) map.set(cat, []);
+    map.get(cat)!.push(s);
+  }
+  return Array.from(map.entries());
+}
 
 function makeStyles(t: TemplateConfig) {
   return StyleSheet.create({
@@ -33,6 +43,7 @@ function makeStyles(t: TemplateConfig) {
     sidebarSectionTitle: { fontSize: 7.5, fontFamily: "Helvetica-Bold", letterSpacing: 1.2, textTransform: "uppercase", color: t.sidebarTextColor, marginBottom: 7 },
     sidebarSection: { marginBottom: 16 },
     sidebarText: { fontSize: 7.5, color: "rgba(255,255,255,0.8)", lineHeight: 1.5, marginBottom: 2 },
+    skillCategory: { fontSize: 6.5, fontFamily: "Helvetica-Bold", letterSpacing: 0.8, textTransform: "uppercase", color: "rgba(255,255,255,0.45)", marginTop: 6, marginBottom: 3 },
     skillName: { fontSize: 7.5, color: t.sidebarTextColor },
     barOuter: { height: 3, backgroundColor: "rgba(255,255,255,0.2)", borderRadius: 2, marginTop: 2, marginBottom: 5 },
     barInner: { height: 3, borderRadius: 2, backgroundColor: t.sidebarTextColor },
@@ -62,10 +73,157 @@ interface Props {
   templateId?: string;
 }
 
+function AtsPdfDocument({ data }: { data: ResumeData }) {
+  const { personalDetails, profile, employmentHistory, education, certifications, skills, languages, hobbies, links } = data;
+  const skillsByCategory = groupSkills(skills);
+
+  const contact = [
+    personalDetails.phone,
+    personalDetails.email,
+    personalDetails.address,
+    ...links.map((l) => l.url),
+  ].filter(Boolean).join("  |  ");
+
+  const ats = StyleSheet.create({
+    page: { padding: 36, fontFamily: "Helvetica", fontSize: 9, color: "#000000" },
+    name: { fontSize: 18, fontFamily: "Helvetica-Bold", marginBottom: 2 },
+    jobTitle: { fontSize: 10, fontFamily: "Helvetica-Bold", marginBottom: 3 },
+    contact: { fontSize: 8, marginBottom: 14 },
+    sectionTitle: { fontSize: 9, fontFamily: "Helvetica-Bold", textTransform: "uppercase", letterSpacing: 1, borderBottom: 1.5, borderBottomColor: "#000", paddingBottom: 2, marginBottom: 6 },
+    section: { marginBottom: 12 },
+    jobRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 3 },
+    jobHeader: { fontSize: 9, fontFamily: "Helvetica-Bold" },
+    jobDate: { fontSize: 8, color: "#333333" },
+    bullet: { flexDirection: "row", gap: 5, marginTop: 1.5 },
+    bulletDot: { fontSize: 9 },
+    bulletText: { flex: 1, fontSize: 9, lineHeight: 1.5 },
+    bodyText: { fontSize: 9, lineHeight: 1.6 },
+    skillLine: { fontSize: 9, lineHeight: 1.8 },
+    skillCategory: { fontFamily: "Helvetica-Bold" },
+  });
+
+  return (
+    <Document>
+      <Page size="A4" style={ats.page}>
+        {/* Header */}
+        <Text style={ats.name}>{personalDetails.fullName}</Text>
+        {personalDetails.jobTitle ? <Text style={ats.jobTitle}>{personalDetails.jobTitle}</Text> : null}
+        {contact ? <Text style={ats.contact}>{contact}</Text> : null}
+
+        {/* Summary */}
+        {profile ? (
+          <View style={ats.section}>
+            <Text style={ats.sectionTitle}>Summary</Text>
+            <Text style={ats.bodyText}>{profile}</Text>
+          </View>
+        ) : null}
+
+        {/* Experience */}
+        {employmentHistory.length > 0 && (
+          <View style={ats.section}>
+            <Text style={ats.sectionTitle}>Experience</Text>
+            {employmentHistory.map((e) => (
+              <View key={e.id} style={{ marginBottom: 10 }}>
+                <View style={ats.jobRow}>
+                  <Text style={ats.jobHeader}>
+                    {e.jobTitle}{e.employer ? `, ${e.employer}` : ""}{e.city ? ` — ${e.city}` : ""}
+                  </Text>
+                  <Text style={ats.jobDate}>
+                    {e.startDate}{e.startDate ? " – " : ""}{e.current ? "Present" : e.endDate}
+                  </Text>
+                </View>
+                {e.bullets.map((b, i) => (
+                  <View key={i} style={ats.bullet}>
+                    <Text style={ats.bulletDot}>{"•"}</Text>
+                    <Text style={ats.bulletText}>{b}</Text>
+                  </View>
+                ))}
+              </View>
+            ))}
+          </View>
+        )}
+
+        {/* Skills */}
+        {skills.length > 0 && (
+          <View style={ats.section}>
+            <Text style={ats.sectionTitle}>Skills</Text>
+            {skillsByCategory.map(([cat, items]) => (
+              <View key={cat} style={{ flexDirection: "row", flexWrap: "wrap" }}>
+                {cat ? (
+                  <Text style={ats.skillLine}>
+                    <Text style={ats.skillCategory}>{cat}: </Text>
+                    {items.map((s) => s.name).join(", ")}
+                  </Text>
+                ) : (
+                  <Text style={ats.skillLine}>{items.map((s) => s.name).join(", ")}</Text>
+                )}
+              </View>
+            ))}
+          </View>
+        )}
+
+        {/* Education */}
+        {education.length > 0 && (
+          <View style={ats.section}>
+            <Text style={ats.sectionTitle}>Education</Text>
+            {education.map((e) => (
+              <View key={e.id} style={{ marginBottom: 6 }} wrap={false}>
+                <View style={ats.jobRow}>
+                  <Text style={ats.jobHeader}>
+                    {e.degree}{e.school ? `, ${e.school}` : ""}{e.city ? ` — ${e.city}` : ""}
+                  </Text>
+                  <Text style={ats.jobDate}>{e.startDate}{e.startDate ? " – " : ""}{e.endDate}</Text>
+                </View>
+                {e.description ? <Text style={ats.bodyText}>{e.description}</Text> : null}
+              </View>
+            ))}
+          </View>
+        )}
+
+        {/* Certifications */}
+        {certifications.length > 0 && (
+          <View style={ats.section}>
+            <Text style={ats.sectionTitle}>Certifications</Text>
+            {certifications.map((c) => (
+              <View key={c.id} style={ats.jobRow}>
+                <Text style={ats.bodyText}>{c.name}{c.issuer ? ` · ${c.issuer}` : ""}</Text>
+                {c.date ? <Text style={ats.jobDate}>{c.date}</Text> : null}
+              </View>
+            ))}
+          </View>
+        )}
+
+        {/* Languages & Hobbies */}
+        {(languages.length > 0 || hobbies.length > 0) && (
+          <View style={ats.section}>
+            <Text style={ats.sectionTitle}>Additional</Text>
+            {languages.length > 0 && (
+              <Text style={ats.skillLine}>
+                <Text style={ats.skillCategory}>Languages: </Text>
+                {languages.map((l) => l.name).join(", ")}
+              </Text>
+            )}
+            {hobbies.length > 0 && (
+              <Text style={ats.skillLine}>
+                <Text style={ats.skillCategory}>Interests: </Text>
+                {hobbies.join(", ")}
+              </Text>
+            )}
+          </View>
+        )}
+      </Page>
+    </Document>
+  );
+}
+
 export function ResumePdfDocument({ data, templateId = "classic" }: Props) {
   const t = getTemplate(templateId);
   const s = makeStyles(t);
   const { personalDetails, profile, employmentHistory, education, certifications, skills, languages, hobbies, links } = data;
+
+  if (t.layout === "ats") {
+    return <AtsPdfDocument data={data} />;
+  }
 
   // Single-column (Minimal) layout
   if (t.layout === "single-column") {
@@ -106,7 +264,7 @@ export function ResumePdfDocument({ data, templateId = "classic" }: Props) {
             <View style={s.minimalSection}>
               <Text style={s.minimalSectionTitle}>Employment History</Text>
               {employmentHistory.map((e) => (
-                <View key={e.id} style={s.entryWrap}>
+                <View key={e.id} style={s.entryWrap} wrap={false}>
                   <Text style={s.jobHeader}>{[e.jobTitle, e.employer, e.city].filter(Boolean).join(", ")}</Text>
                   <Text style={s.jobMeta}>{e.startDate}{e.startDate ? " — " : ""}{e.current ? "Present" : e.endDate}</Text>
                   {e.bullets.map((b, i) => (
@@ -125,7 +283,7 @@ export function ResumePdfDocument({ data, templateId = "classic" }: Props) {
             <View style={s.minimalSection}>
               <Text style={s.minimalSectionTitle}>Education</Text>
               {education.map((e) => (
-                <View key={e.id} style={s.entryWrap}>
+                <View key={e.id} style={s.entryWrap} wrap={false}>
                   <Text style={s.jobHeader}>{[e.degree, e.school, e.city].filter(Boolean).join(", ")}</Text>
                   <Text style={s.jobMeta}>{e.startDate}{e.startDate ? " — " : ""}{e.endDate}</Text>
                   {e.description ? <Text style={s.bodyText}>{e.description}</Text> : null}
@@ -150,32 +308,41 @@ export function ResumePdfDocument({ data, templateId = "classic" }: Props) {
             </View>
           )}
 
-          {/* Skills — 2 columnas para no desbordar verticalmente */}
+          {/* Skills — grouped by category, 2 columns per group */}
           {skills.length > 0 && (
             <View style={s.minimalSection}>
               <Text style={s.minimalSectionTitle}>Skills</Text>
-              <View style={{ flexDirection: "row", gap: 20 }}>
-                <View style={{ flex: 1 }}>
-                  {skills.slice(0, Math.ceil(skills.length / 2)).map((skill) => (
-                    <View key={skill.id} style={s.minimalSkillRow}>
-                      <Text style={s.minimalSkillName}>{skill.name}</Text>
-                      <View style={s.minimalBarOuter}>
-                        <View style={[s.minimalBarInner, { width: `${skill.level}%` }]} />
-                      </View>
+              {groupSkills(skills).map(([cat, items]) => (
+                <View key={cat}>
+                  {cat ? (
+                    <Text style={{ fontSize: 7, fontFamily: "Helvetica-Bold", letterSpacing: 0.8, textTransform: "uppercase", color: "#9ca3af", marginTop: 6, marginBottom: 4 }}>
+                      {cat}
+                    </Text>
+                  ) : null}
+                  <View style={{ flexDirection: "row", gap: 20 }}>
+                    <View style={{ flex: 1 }}>
+                      {items.slice(0, Math.ceil(items.length / 2)).map((skill) => (
+                        <View key={skill.id} style={s.minimalSkillRow}>
+                          <Text style={s.minimalSkillName}>{skill.name}</Text>
+                          <View style={s.minimalBarOuter}>
+                            <View style={[s.minimalBarInner, { width: `${skill.level}%` }]} />
+                          </View>
+                        </View>
+                      ))}
                     </View>
-                  ))}
-                </View>
-                <View style={{ flex: 1 }}>
-                  {skills.slice(Math.ceil(skills.length / 2)).map((skill) => (
-                    <View key={skill.id} style={s.minimalSkillRow}>
-                      <Text style={s.minimalSkillName}>{skill.name}</Text>
-                      <View style={s.minimalBarOuter}>
-                        <View style={[s.minimalBarInner, { width: `${skill.level}%` }]} />
-                      </View>
+                    <View style={{ flex: 1 }}>
+                      {items.slice(Math.ceil(items.length / 2)).map((skill) => (
+                        <View key={skill.id} style={s.minimalSkillRow}>
+                          <Text style={s.minimalSkillName}>{skill.name}</Text>
+                          <View style={s.minimalBarOuter}>
+                            <View style={[s.minimalBarInner, { width: `${skill.level}%` }]} />
+                          </View>
+                        </View>
+                      ))}
                     </View>
-                  ))}
+                  </View>
                 </View>
-              </View>
+              ))}
             </View>
           )}
 
@@ -238,7 +405,7 @@ export function ResumePdfDocument({ data, templateId = "classic" }: Props) {
         <View style={s.section}>
           <Text style={s.sectionTitle}>Employment History</Text>
           {employmentHistory.map((e) => (
-            <View key={e.id} style={s.entryWrap}>
+            <View key={e.id} style={s.entryWrap} wrap={false}>
               <Text style={s.jobHeader}>{[e.jobTitle, e.employer, e.city].filter(Boolean).join(", ")}</Text>
               <Text style={s.jobMeta}>{e.startDate}{e.startDate ? " — " : ""}{e.current ? "Present" : e.endDate}</Text>
               {e.bullets.map((b, i) => (
@@ -257,7 +424,7 @@ export function ResumePdfDocument({ data, templateId = "classic" }: Props) {
         <View style={s.section}>
           <Text style={s.sectionTitle}>Education</Text>
           {education.map((e) => (
-            <View key={e.id} style={s.entryWrap}>
+            <View key={e.id} style={s.entryWrap} wrap={false}>
               <Text style={s.jobHeader}>{[e.degree, e.school, e.city].filter(Boolean).join(", ")}</Text>
               <Text style={s.jobMeta}>{e.startDate}{e.startDate ? " — " : ""}{e.endDate}</Text>
               {e.description ? <Text style={s.bodyText}>{e.description}</Text> : null}
@@ -332,12 +499,17 @@ export function ResumePdfDocument({ data, templateId = "classic" }: Props) {
       {skills.length > 0 && (
         <View style={s.sidebarSection}>
           <Text style={s.sidebarSectionTitle}>Skills</Text>
-          {skills.map((skill) => (
-            <View key={skill.id}>
-              <Text style={s.skillName}>{skill.name}</Text>
-              <View style={s.barOuter}>
-                <View style={[s.barInner, { width: `${skill.level}%` }]} />
-              </View>
+          {groupSkills(skills).map(([cat, items]) => (
+            <View key={cat}>
+              {cat ? <Text style={s.skillCategory}>{cat}</Text> : null}
+              {items.map((skill) => (
+                <View key={skill.id}>
+                  <Text style={s.skillName}>{skill.name}</Text>
+                  <View style={s.barOuter}>
+                    <View style={[s.barInner, { width: `${skill.level}%` }]} />
+                  </View>
+                </View>
+              ))}
             </View>
           ))}
         </View>

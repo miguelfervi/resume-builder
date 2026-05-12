@@ -4,7 +4,7 @@ export interface TemplateConfig {
   sidebarColor: string;
   sidebarTextColor: string;
   accentColor: string;
-  layout: "sidebar-right" | "sidebar-left" | "single-column";
+  layout: "sidebar-right" | "sidebar-left" | "single-column" | "ats";
 }
 
 export const TEMPLATES: TemplateConfig[] = [
@@ -31,6 +31,14 @@ export const TEMPLATES: TemplateConfig[] = [
     sidebarTextColor: "#ffffff",
     accentColor: "#1f2937",
     layout: "single-column",
+  },
+  {
+    id: "ats",
+    name: "ATS",
+    sidebarColor: "#000000",
+    sidebarTextColor: "#000000",
+    accentColor: "#000000",
+    layout: "ats",
   },
 ];
 

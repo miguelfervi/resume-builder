@@ -11,6 +11,7 @@ const THUMBNAILS: Record<string, { left: string; right: string }> = {
   classic: { left: "bg-white", right: "bg-[#1e3a5f]" },
   modern:  { left: "bg-[#0d9488]", right: "bg-white" },
   minimal: { left: "bg-white", right: "bg-white" },
+  ats:     { left: "bg-white", right: "bg-white" },
 };
 
 export function TemplateSelector({ templateId, onChange }: Props) {
@@ -48,6 +49,16 @@ export function TemplateSelector({ templateId, onChange }: Props) {
                   <div className="flex-1 bg-white flex flex-col justify-center p-1 gap-0.5">
                     <div className="h-1 w-2/3 bg-gray-800 rounded-full" />
                     <div className="h-0.5 w-1/2 bg-gray-300 rounded-full" />
+                  </div>
+                )}
+                {t.layout === "ats" && (
+                  <div className="flex-1 bg-white flex flex-col justify-start p-1 gap-0.5 pt-1.5">
+                    <div className="h-1 w-1/2 bg-gray-900 rounded-sm" />
+                    <div className="h-px w-full bg-gray-900 mt-0.5" />
+                    <div className="h-0.5 w-full bg-gray-300 rounded-sm mt-0.5" />
+                    <div className="h-0.5 w-5/6 bg-gray-300 rounded-sm" />
+                    <div className="h-px w-full bg-gray-900 mt-0.5" />
+                    <div className="h-0.5 w-2/3 bg-gray-300 rounded-sm mt-0.5" />
                   </div>
                 )}
               </div>

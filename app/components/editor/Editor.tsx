@@ -1,7 +1,6 @@
 "use client";
 
-import { ResumeData } from "@/app/types/resume";
-import { SavedResume } from "@/app/types/resume";
+import { ResumeData, SavedResume } from "@/app/types/resume";
 import { PersonalDetailsEditor } from "./PersonalDetailsEditor";
 import { ProfileEditor } from "./ProfileEditor";
 import { EmploymentEditor } from "./EmploymentEditor";
@@ -27,6 +26,7 @@ interface Props {
   onDuplicate: (id: string) => void;
   onDelete: (id: string) => void;
   onRename: (id: string, name: string) => void;
+  onImport: (data: ResumeData, name: string) => void;
   canUndo: boolean;
   canRedo: boolean;
   onUndo: () => void;
@@ -36,7 +36,7 @@ interface Props {
 export function Editor({
   data, onChange, onReset,
   templateId, onTemplateChange,
-  resumes, activeId, onSwitch, onCreate, onDuplicate, onDelete, onRename,
+  resumes, activeId, onSwitch, onCreate, onDuplicate, onDelete, onRename, onImport,
   canUndo, canRedo, onUndo, onRedo,
 }: Props) {
   return (
@@ -70,6 +70,7 @@ export function Editor({
         resumes={resumes} activeId={activeId}
         onSwitch={onSwitch} onCreate={onCreate}
         onDuplicate={onDuplicate} onDelete={onDelete} onRename={onRename}
+        onImport={onImport}
       />
 
       {/* Template selector */}

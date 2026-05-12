@@ -13,7 +13,7 @@ export default function Home() {
   const {
     data, setData, templateId, setTemplateId,
     resumes, activeResume, isHydrated, resetData,
-    switchResume, createResume, duplicateResume, deleteResume, renameResume,
+    switchResume, createResume, duplicateResume, deleteResume, renameResume, importResume,
     undo, redo, canUndo, canRedo,
   } = useResume();
 
@@ -46,6 +46,7 @@ export default function Home() {
           onDuplicate={duplicateResume}
           onDelete={deleteResume}
           onRename={renameResume}
+          onImport={importResume}
           canUndo={canUndo}
           canRedo={canRedo}
           onUndo={undo}
@@ -71,7 +72,7 @@ export default function Home() {
         </div>
 
         <div className="w-full max-w-2xl">
-          <A4Container singlePage={templateId === "minimal"}>
+          <A4Container singlePage={templateId === "minimal" || templateId === "ats"}>
             <ResumePreview data={data} templateId={templateId} />
           </A4Container>
         </div>

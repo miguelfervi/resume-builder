@@ -1,7 +1,17 @@
 "use client";
 
-import { ResumeData } from "@/app/types/resume";
+import { ResumeData, Skill } from "@/app/types/resume";
 import { getTemplate, TemplateConfig } from "@/app/lib/templates";
+
+function groupSkills(skills: Skill[]): [string, Skill[]][] {
+  const map = new Map<string, Skill[]>();
+  for (const s of skills) {
+    const cat = s.category?.trim() || "";
+    if (!map.has(cat)) map.set(cat, []);
+    map.get(cat)!.push(s);
+  }
+  return Array.from(map.entries());
+}
 
 interface Props {
   data: ResumeData;
@@ -90,10 +100,19 @@ function Sidebar({ data, t }: { data: ResumeData; t: TemplateConfig }) {
 
       {skills.length > 0 && (
         <SidebarSection title="Skills" color={text}>
-          {skills.map((s) => (
-            <div key={s.id} className="mb-1.5">
-              <div className="text-[9px]" style={{ color: text }}>{s.name}</div>
-              <ProgressBar level={s.level} color={barFill} />
+          {groupSkills(skills).map(([cat, items]) => (
+            <div key={cat}>
+              {cat && (
+                <div className="text-[7.5px] font-bold uppercase tracking-[1px] mb-1 mt-2 first:mt-0" style={{ color: "rgba(255,255,255,0.5)" }}>
+                  {cat}
+                </div>
+              )}
+              {items.map((s) => (
+                <div key={s.id} className="mb-1.5">
+                  <div className="text-[9px]" style={{ color: text }}>{s.name}</div>
+                  <ProgressBar level={s.level} color={barFill} />
+                </div>
+              ))}
             </div>
           ))}
         </SidebarSection>
@@ -258,18 +277,27 @@ function MinimalLayout({ data, t }: { data: ResumeData; t: TemplateConfig }) {
 
       <MainContent data={data} t={t} />
 
-      {/* Skills — 2 columnas para no desbordar verticalmente */}
+      {/* Skills — grouped by category, 2 columns */}
       {skills.length > 0 && (
         <div className="mt-2 mb-5">
           <div className="text-[13px] font-bold border-b border-gray-200 pb-1 mb-2.5" style={{ color: accent }}>
             Skills
           </div>
           <div className="grid grid-cols-2 gap-x-8">
-            {skills.map((s) => (
-              <div key={s.id} className="flex justify-between items-center mb-1.5">
-                <span className="text-[10px] text-gray-700">{s.name}</span>
-                <div className="w-20 h-1 bg-gray-200 rounded-full">
-                  <div className="h-1 rounded-full" style={{ backgroundColor: accent, width: `${s.level}%` }} />
+            {groupSkills(skills).map(([cat, items]) => (
+              <div key={cat} className="col-span-2">
+                {cat && (
+                  <div className="text-[8px] font-bold uppercase tracking-[1px] mb-1 mt-2 first:mt-0 text-gray-400">{cat}</div>
+                )}
+                <div className="grid grid-cols-2 gap-x-8">
+                  {items.map((s) => (
+                    <div key={s.id} className="flex justify-between items-center mb-1.5">
+                      <span className="text-[10px] text-gray-700">{s.name}</span>
+                      <div className="w-20 h-1 bg-gray-200 rounded-full">
+                        <div className="h-1 rounded-full" style={{ backgroundColor: accent, width: `${s.level}%` }} />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             ))}
@@ -309,6 +337,124 @@ function MinimalLayout({ data, t }: { data: ResumeData; t: TemplateConfig }) {
   );
 }
 
+function AtsLayout({ data }: { data: ResumeData }) {
+  const { personalDetails, profile, employmentHistory, education, certifications, skills, languages, hobbies, links } = data;
+
+  const contact = [
+    personalDetails.phone,
+    personalDetails.email,
+    personalDetails.address,
+    ...links.map((l) => l.url),
+  ].filter(Boolean).join("  |  ");
+
+  const skillsByCategory = groupSkills(skills);
+
+  return (
+    <div className="p-10 bg-white" style={{ fontFamily: "Arial, Helvetica, sans-serif", color: "#000" }}>
+      {/* Header */}
+      <div className="mb-4">
+        <div style={{ fontSize: 22, fontWeight: 700, color: "#000" }}>{personalDetails.fullName}</div>
+        {personalDetails.jobTitle && (
+          <div style={{ fontSize: 12, fontWeight: 600, color: "#000", marginTop: 2 }}>{personalDetails.jobTitle}</div>
+        )}
+        {contact && (
+          <div style={{ fontSize: 9, color: "#000", marginTop: 4 }}>{contact}</div>
+        )}
+      </div>
+
+      {/* Summary */}
+      {profile && (
+        <div className="mb-4">
+          <div style={{ fontSize: 11, fontWeight: 700, borderBottom: "1.5px solid #000", paddingBottom: 2, marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>Summary</div>
+          <div style={{ fontSize: 10, lineHeight: 1.6 }}>{profile}</div>
+        </div>
+      )}
+
+      {/* Experience */}
+      {employmentHistory.length > 0 && (
+        <div className="mb-4">
+          <div style={{ fontSize: 11, fontWeight: 700, borderBottom: "1.5px solid #000", paddingBottom: 2, marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>Experience</div>
+          {employmentHistory.map((e) => (
+            <div key={e.id} className="mb-3">
+              <div className="flex justify-between items-baseline">
+                <span style={{ fontSize: 10, fontWeight: 700 }}>{e.jobTitle}{e.employer ? `, ${e.employer}` : ""}{e.city ? ` — ${e.city}` : ""}</span>
+                <span style={{ fontSize: 9, color: "#333" }}>{e.startDate}{e.startDate ? " – " : ""}{e.current ? "Present" : e.endDate}</span>
+              </div>
+              {e.bullets.map((b, i) => (
+                <div key={i} className="flex gap-2 mt-0.5">
+                  <span style={{ fontSize: 10 }}>•</span>
+                  <span style={{ fontSize: 10, lineHeight: 1.6 }}>{b}</span>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Skills */}
+      {skills.length > 0 && (
+        <div className="mb-4">
+          <div style={{ fontSize: 11, fontWeight: 700, borderBottom: "1.5px solid #000", paddingBottom: 2, marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>Skills</div>
+          {skillsByCategory.map(([cat, items]) => (
+            <div key={cat} style={{ fontSize: 10, lineHeight: 1.8 }}>
+              {cat
+                ? <><span style={{ fontWeight: 700 }}>{cat}:</span>{" "}{items.map((s) => s.name).join(", ")}</>
+                : items.map((s) => s.name).join(", ")
+              }
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Education */}
+      {education.length > 0 && (
+        <div className="mb-4">
+          <div style={{ fontSize: 11, fontWeight: 700, borderBottom: "1.5px solid #000", paddingBottom: 2, marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>Education</div>
+          {education.map((e) => (
+            <div key={e.id} className="mb-2">
+              <div className="flex justify-between items-baseline">
+                <span style={{ fontSize: 10, fontWeight: 700 }}>{e.degree}{e.school ? `, ${e.school}` : ""}{e.city ? ` — ${e.city}` : ""}</span>
+                <span style={{ fontSize: 9, color: "#333" }}>{e.startDate}{e.startDate ? " – " : ""}{e.endDate}</span>
+              </div>
+              {e.description && <div style={{ fontSize: 10, lineHeight: 1.6 }}>{e.description}</div>}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Certifications */}
+      {certifications.length > 0 && (
+        <div className="mb-4">
+          <div style={{ fontSize: 11, fontWeight: 700, borderBottom: "1.5px solid #000", paddingBottom: 2, marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>Certifications</div>
+          {certifications.map((c) => (
+            <div key={c.id} className="flex justify-between items-baseline mb-1">
+              <span style={{ fontSize: 10 }}>{c.name}{c.issuer ? ` · ${c.issuer}` : ""}</span>
+              {c.date && <span style={{ fontSize: 9, color: "#333" }}>{c.date}</span>}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Languages & Hobbies */}
+      {(languages.length > 0 || hobbies.length > 0) && (
+        <div className="mb-4">
+          <div style={{ fontSize: 11, fontWeight: 700, borderBottom: "1.5px solid #000", paddingBottom: 2, marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 }}>Additional</div>
+          {languages.length > 0 && (
+            <div style={{ fontSize: 10, lineHeight: 1.8 }}>
+              <span style={{ fontWeight: 700 }}>Languages:</span>{" "}{languages.map((l) => l.name).join(", ")}
+            </div>
+          )}
+          {hobbies.length > 0 && (
+            <div style={{ fontSize: 10, lineHeight: 1.8 }}>
+              <span style={{ fontWeight: 700 }}>Interests:</span>{" "}{hobbies.join(", ")}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function ResumePreview({ data, templateId = "classic" }: Props) {
   const t = getTemplate(templateId);
 
@@ -316,6 +462,14 @@ export function ResumePreview({ data, templateId = "classic" }: Props) {
     return (
       <div className="w-full bg-white" style={{ fontFamily: "Arial, Helvetica, sans-serif" }}>
         <MinimalLayout data={data} t={t} />
+      </div>
+    );
+  }
+
+  if (t.layout === "ats") {
+    return (
+      <div className="w-full bg-white" style={{ fontFamily: "Arial, Helvetica, sans-serif" }}>
+        <AtsLayout data={data} />
       </div>
     );
   }

@@ -104,6 +104,22 @@ export function useResume() {
     reset(createInitialAppState());
   }, [reset]);
 
+  const importResume = useCallback((data: ResumeData, name = "Imported Resume") => {
+    const now = new Date().toISOString();
+    const resume: SavedResume = {
+      id: crypto.randomUUID(),
+      name,
+      templateId: "classic",
+      data,
+      createdAt: now,
+      updatedAt: now,
+    };
+    setAppState((prev: AppState) => ({
+      activeResumeId: resume.id,
+      resumes: [...prev.resumes, resume],
+    }));
+  }, [setAppState]);
+
   return {
     appState,
     activeResume,
@@ -119,6 +135,7 @@ export function useResume() {
     deleteResume,
     renameResume,
     resetData,
+    importResume,
     undo,
     redo,
     canUndo,
